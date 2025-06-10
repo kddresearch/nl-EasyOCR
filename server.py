@@ -2,6 +2,7 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.responses import JSONResponse
 import easyocr
 import uvicorn
+import numpy as np # Import numpy
 
 app = FastAPI(
     title="EasyOCR FastAPI Server",
@@ -17,6 +18,23 @@ def get_reader(langs: list[str], gpu: bool) -> easyocr.Reader:
     if key not in _readers:
         _readers[key] = easyocr.Reader(langs, gpu=gpu)
     return _readers[key]
+
+def to_native_types(data):
+    """
+    Recursively converts numpy types in a data structure to native Python types
+    to ensure JSON serialization.
+    """
+    if isinstance(data, list):
+        return [to_native_types(item) for item in data]
+    if isinstance(data, tuple):
+        return tuple(to_native_types(item) for item in data)
+    if isinstance(data, np.integer):
+        return int(data)
+    if isinstance(data, np.floating):
+        return float(data)
+    if isinstance(data, np.ndarray):
+        return data.tolist()
+    return data
 
 
 @app.post("/readtext")
@@ -34,13 +52,23 @@ async def readtext_endpoint(
     - gpu: whether to use GPU
     """
     try:
-        print(f"Received file: {file.filename}, langs: {langs}, detail: {detail}, gpu: {gpu}")
+        print(
+            f"Received file: {file.filename}, langs: {langs}, detail: {detail}, gpu: {gpu}"
+        )
         languages = [l.strip() for l in langs.split(",") if l.strip()]
         reader = get_reader(languages, gpu)
         img_bytes = await file.read()
         result = reader.readtext(img_bytes, detail=detail)
-        return JSONResponse({"result": result})
+
+        # --- SOLUTION: Convert the result before returning ---
+        serializable_result = to_native_types(result)
+
+        return JSONResponse({"result": serializable_result})
     except Exception as e:
+        # It's good practice to log the full exception for debugging
+        print(f"An error occurred: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
