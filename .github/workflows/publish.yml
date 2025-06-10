@@ -35,5 +35,5 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/my-image:latest
-            ghcr.io/${{ github.repository_owner }}/my-image:${{ github.ref_name }}
+            ghcr.io/${{ github.repository_owner }}/nl-easyocr:latest
+            ghcr.io/${{ github.repository_owner }}/nl-easyocr:${{ github.ref_name }}
