@@ -74,8 +74,14 @@ async def readtext_endpoint(
 
 @app.get("/")
 async def health_check():
-    return {"status": "ok", "message": "EasyOCR server is running"}
-
+    import torch
+    return {
+        "status": "ok",
+        "message": "EasyOCR server is running",
+        "cuda_available": torch.cuda.is_available(),
+        "cuda_device_count": torch.cuda.device_count(),
+        "current_device": torch.cuda.current_device() if torch.cuda.is_available() else None
+    }
 
 if __name__ == "__main__":
     uvicorn.run("server:app", host="0.0.0.0", port=80)
