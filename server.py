@@ -42,7 +42,7 @@ async def readtext_endpoint(
     file: UploadFile = File(...),
     langs: str = Form("en"),
     detail: int = Form(1),
-    gpu: bool = Form(False),
+    gpu: bool = Form(True),
 ):
     """
     Perform OCR on an uploaded image.
